@@ -1,3 +1,4 @@
+
 import React, { useCallback } from "react";
 import { StyleSheet, Text, View, Dimensions, Pressable } from "react-native";
 import Animated, {
@@ -22,7 +23,29 @@ const CIRCLE_LENGTH = 1000;
 const R = CIRCLE_LENGTH / (2 * Math.PI);
 
 export default function App() {
-  const AnimatedCircle = Animated.createAnimatedComponent(Circle);// do not remove this code from here
+  const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+  const progress = useSharedValue(0);
+
+  const animatedProps = useAnimatedProps(() => {
+    return {
+      strokeDasharray: [
+        CIRCLE_LENGTH * progress.value,
+        CIRCLE_LENGTH * (1 - progress.value),
+      ],
+    };
+  });
+
+  const progressText = useDerivedValue(() => {
+    return `${Math.floor(progress.value * 100)}`;
+  });
+
+  const onPress = useCallback(() => {
+    progress.value = withTiming(
+      progress.value === 0 ? 1 : 0,
+      { duration: 2000 }
+    );
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -34,6 +57,7 @@ export default function App() {
           stroke={BACKGROUND_STROKE_COLOR}
           strokeWidth={30}
         />
+
         <AnimatedCircle
           cx={width / 2}
           cy={height / 2}
@@ -41,16 +65,19 @@ export default function App() {
           stroke={STROKE_COLOR}
           strokeWidth={25}
           strokeDashoffset={250}
-          strokeDasharray={[300, 700]} // make this prop animated
+          animatedProps={animatedProps}
           strokeLinecap={"butt"}
           fill={BACKGROUND_COLOR}
-        ></AnimatedCircle>
+        />
       </Svg>
+
       <ReText
         style={styles.progressText}
-        text={{ value: "30" }} // string derived from shared value with useDerivedValue hook should be used here
+        text={progressText}
       />
+
       <Pressable
+        onPress={onPress}
         style={({ pressed }) => [
           styles.button,
           {
